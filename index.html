@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DariMar Viajes y Turismo</title>
+    <meta name="description" content="Traslados privados y viajes en combi con DariMar Viajes y Turismo. Aeropuerto, eventos, grupos y viajes a medida.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="hero" id="inicio">
+      <video class="hero-video" src="assets/hero-video.mp4" autoplay muted loop playsinline poster="assets/hero-van.jpg"></video>
+      <div class="hero-overlay"></div>
+
+      <nav class="nav">
+        <a class="brand" href="#inicio" aria-label="DariMar inicio">
+          <span class="brand-symbol">DM</span>
+          <span>
+            <strong>DariMar</strong>
+            <small>Viajes y Turismo</small>
+          </span>
+        </a>
+
+        <button class="menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div class="nav-links">
+          <a href="#servicios">Servicios</a>
+          <a href="#flota">Flota</a>
+          <a href="#galeria">Galeria</a>
+          <a href="#reservar">Reservar</a>
+        </div>
+      </nav>
+
+      <section class="hero-content">
+        <div class="hero-copy">
+          <p class="badge">Traslados confiables desde San Bernardo</p>
+          <h1>DariMar Viajes y Turismo</h1>
+          <p>Viajes en combi para aeropuerto, eventos, deportes, turismo y traslados privados. Puntualidad, comodidad y atencion cercana en cada salida.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#reservar">Cotizar viaje</a>
+            <a class="btn ghost" href="#galeria">Ver la combi</a>
+          </div>
+        </div>
+
+        <form class="quote-panel" id="quickQuote">
+          <span class="panel-kicker">Consulta rapida</span>
+          <label>
+            Tipo de traslado
+            <select id="tripType">
+              <option>Aeropuerto</option>
+              <option>Evento privado</option>
+              <option>Viaje deportivo</option>
+              <option>Turismo grupal</option>
+              <option>Traslado a medida</option>
+            </select>
+          </label>
+          <label>
+            Pasajeros
+            <input id="quickPassengers" type="number" min="1" max="18" value="6">
+          </label>
+          <label>
+            Fecha
+            <input id="quickDate" type="date">
+          </label>
+          <button class="btn primary full" type="submit">Enviar por WhatsApp</button>
+        </form>
+      </section>
+    </header>
+
+    <main>
+      <section class="stats">
+        <article>
+          <strong>18</strong>
+          <span>pasajeros segun unidad</span>
+        </article>
+        <article>
+          <strong>24/7</strong>
+          <span>consultas por WhatsApp</span>
+        </article>
+        <article>
+          <strong>100</strong>
+          <span>habilitacion visible</span>
+        </article>
+        <article>
+          <strong>+ rutas</strong>
+          <span>aeropuerto, eventos y turismo</span>
+        </article>
+      </section>
+
+      <section class="section services" id="servicios">
+        <div class="section-title">
+          <span class="eyebrow">Servicios</span>
+          <h2>Una combi lista para cada plan</h2>
+          <p>Armamos el traslado segun tu grupo, horario y destino. Simple, claro y sin vueltas.</p>
+        </div>
+
+        <div class="service-grid">
+          <article class="service-card">
+            <span class="icon">✈</span>
+            <h3>Aeropuerto</h3>
+            <p>Ida, vuelta o espera coordinada para viajar sin apuro y llegar a horario.</p>
+          </article>
+          <article class="service-card">
+            <span class="icon">★</span>
+            <h3>Eventos</h3>
+            <p>Traslados para fiestas, reuniones, casamientos y salidas privadas.</p>
+          </article>
+          <article class="service-card">
+            <span class="icon">⚑</span>
+            <h3>Deportes</h3>
+            <p>Equipos, clubes y grupos con bolsos, horarios definidos y regreso pactado.</p>
+          </article>
+          <article class="service-card">
+            <span class="icon">⌁</span>
+            <h3>Turismo</h3>
+            <p>Escapadas, excursiones y viajes a medida para disfrutar el camino.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="feature" id="flota">
+        <div class="feature-image">
+          <img src="assets/road-sunset.jpg" alt="Combi DariMar en ruta al atardecer">
+        </div>
+        <div class="feature-copy">
+          <span class="eyebrow">Flota DariMar</span>
+          <h2>Comodidad, aire y espacio para viajar mejor</h2>
+          <p>Un servicio pensado para grupos que necesitan moverse seguros: salidas coordinadas, comunicacion por WhatsApp y atencion personalizada.</p>
+          <ul class="check-list">
+            <li>Unidades habilitadas para transporte de pasajeros</li>
+            <li>Viajes privados y grupales</li>
+            <li>Coordinacion de horarios y puntos de encuentro</li>
+            <li>Equipaje y elementos deportivos segun disponibilidad</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section gallery-section" id="galeria">
+        <div class="section-title">
+          <span class="eyebrow">Galeria</span>
+          <h2>Fotos reales de los viajes</h2>
+          <p>La pagina usa material propio para que el cliente vea la combi y el tipo de servicio antes de consultar.</p>
+        </div>
+
+        <div class="gallery">
+          <button class="gallery-item large" type="button" data-img="assets/hero-van.jpg">
+            <img src="assets/hero-van.jpg" alt="Combi DariMar de frente">
+          </button>
+          <button class="gallery-item tall" type="button" data-img="assets/hockey-trip.png">
+            <img src="assets/hockey-trip.png" alt="Viaje de equipo femenino en combi DariMar">
+          </button>
+          <button class="gallery-item" type="button" data-img="assets/airport.png">
+            <img src="assets/airport.png" alt="Traslado al aeropuerto">
+          </button>
+          <button class="gallery-item" type="button" data-img="assets/brand-post.png">
+            <img src="assets/brand-post.png" alt="Publicacion de marca DariMar">
+          </button>
+          <button class="gallery-item wide" type="button" data-img="assets/van-detail.jpg">
+            <img src="assets/van-detail.jpg" alt="Detalle de unidad DariMar">
+          </button>
+        </div>
+      </section>
+
+      <section class="booking" id="reservar">
+        <div class="booking-copy">
+          <span class="eyebrow">Reservas</span>
+          <h2>Cotiza tu traslado por WhatsApp</h2>
+          <p>Completa los datos y generamos un mensaje listo para enviar. Podes modificarlo antes de mandarlo.</p>
+        </div>
+
+        <form class="booking-form" id="bookingForm">
+          <label>
+            Nombre
+            <input id="name" type="text" placeholder="Tu nombre" required>
+          </label>
+          <label>
+            Origen
+            <input id="origin" type="text" placeholder="Ej: San Bernardo" required>
+          </label>
+          <label>
+            Destino
+            <input id="destination" type="text" placeholder="Ej: Aeropuerto / evento" required>
+          </label>
+          <label>
+            Pasajeros
+            <input id="passengers" type="number" min="1" max="18" value="6" required>
+          </label>
+          <label>
+            Fecha
+            <input id="date" type="date" required>
+          </label>
+          <label>
+            Horario
+            <input id="time" type="time" required>
+          </label>
+          <label class="wide">
+            Comentario
+            <textarea id="notes" rows="4" placeholder="Contanos si llevas equipaje, bolsos deportivos o necesitas ida y vuelta"></textarea>
+          </label>
+          <button class="btn primary full" type="submit">Abrir WhatsApp</button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <strong>DariMar Viajes y Turismo</strong>
+        <span>Traslados privados, turismo y grupos.</span>
+      </div>
+      <a class="footer-phone" href="https://wa.me/5492257691814" target="_blank" rel="noreferrer">2257 69-1814</a>
+    </footer>
+
+    <dialog class="lightbox" id="lightbox">
+      <button class="close-lightbox" type="button" aria-label="Cerrar galeria">×</button>
+      <img src="" alt="Foto ampliada">
+    </dialog>
+
+    <script src="script.js"></script>
+  </body>
+</html>
