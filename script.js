@@ -4,9 +4,6 @@ const menuButton = document.querySelector(".menu-button");
 const navLinks = document.querySelector(".nav-links");
 const quickQuote = document.querySelector("#quickQuote");
 const bookingForm = document.querySelector("#bookingForm");
-const lightbox = document.querySelector("#lightbox");
-const lightboxImage = lightbox.querySelector("img");
-const closeLightbox = document.querySelector(".close-lightbox");
 
 function todayIso() {
   return new Date().toISOString().split("T")[0];
@@ -48,30 +45,33 @@ bookingForm.addEventListener("submit", (event) => {
   const message = [
     "Hola DariMar, quiero cotizar un traslado.",
     `Nombre: ${getValue("#name")}`,
+    `Teléfono: ${getValue("#phone")}`,
     `Origen: ${getValue("#origin")}`,
     `Destino: ${getValue("#destination")}`,
     `Pasajeros: ${getValue("#passengers")}`,
     `Fecha: ${getValue("#date")}`,
     `Horario: ${getValue("#time")}`,
+    `Regreso: ${getValue("#returnTrip")}`,
+    `Fecha y hora de regreso: ${getValue("#returnDateTime") || "A confirmar"}`,
     `Comentario: ${getValue("#notes") || "Sin comentarios"}`,
   ].join("\n");
 
   openWhatsApp(message);
 });
 
-document.querySelectorAll("[data-img]").forEach((item) => {
-  item.addEventListener("click", () => {
-    lightboxImage.src = item.dataset.img;
-    lightbox.showModal();
-  });
-});
+const animatedBlocks = document.querySelectorAll(".section-title, .service-card, .feature, .vehicle-card, .about-card, .gallery-item, .booking");
+animatedBlocks.forEach((element) => element.classList.add("reveal"));
 
-closeLightbox.addEventListener("click", () => {
-  lightbox.close();
-});
-
-lightbox.addEventListener("click", (event) => {
-  if (event.target === lightbox) {
-    lightbox.close();
-  }
-});
+if ("IntersectionObserver" in window) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  animatedBlocks.forEach((element) => observer.observe(element));
+} else {
+  animatedBlocks.forEach((element) => element.classList.add("is-visible"));
+}

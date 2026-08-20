@@ -5,18 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DariMar Viajes y Turismo</title>
     <meta name="description" content="Traslados privados y viajes en combi con DariMar Viajes y Turismo. Aeropuerto, eventos, grupos y viajes a medida.">
+    <meta name="theme-color" content="#071f4a">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="DariMar Viajes y Turismo | Traslados privados y grupales">
+    <meta property="og:description" content="Combis con chofer para aeropuerto, eventos, deportes, turismo y traslados a medida.">
+    <meta property="og:site_name" content="DariMar Viajes y Turismo">
+    <meta property="og:image" content="assets/hero-van.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DariMar Viajes y Turismo">
+    <meta name="twitter:description" content="Traslados privados y grupales con combi y chofer.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"Organization","name":"DariMar Viajes y Turismo","description":"Traslados privados y viajes en combi para aeropuerto, eventos, deportes, turismo y grupos.","telephone":"+54 9 2257 69-1814"}
+    </script>
   </head>
   <body>
+    <svg class="icon-definitions" aria-hidden="true"><symbol id="whatsapp-icon" viewBox="0 0 32 32"><path d="M16.02 3.2a12.66 12.66 0 0 0-10.9 19.1L3.2 28.8l6.66-1.74A12.67 12.67 0 1 0 16.02 3.2Zm0 22.98a10.28 10.28 0 0 1-5.24-1.44l-.38-.23-3.95 1.03 1.05-3.84-.25-.4a10.28 10.28 0 1 1 8.77 4.88Zm5.64-7.7c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.21.31-.82 1.02-1 1.23-.18.21-.37.23-.68.08-1.84-.92-3.05-1.65-4.27-3.75-.32-.55.32-.51.91-1.7.1-.21.05-.39-.03-.55-.08-.16-.71-1.71-.98-2.34-.26-.62-.53-.54-.71-.55h-.61c-.21 0-.55.08-.84.39-.29.31-1.11 1.08-1.11 2.63s1.14 3.05 1.3 3.26c.16.21 2.25 3.43 5.45 4.81.76.33 1.35.52 1.81.67.76.24 1.46.21 2.01.13.61-.09 1.85-.76 2.11-1.5.26-.73.26-1.36.18-1.5-.08-.13-.29-.21-.6-.37Z"/></symbol></svg>
+    <a class="topbar" href="https://wa.me/5492257691814" target="_blank" rel="noreferrer">◔ Consultá disponibilidad y formas de pago por WhatsApp</a>
     <header class="hero" id="inicio">
-      <video class="hero-video" src="assets/hero-video.mp4" autoplay muted loop playsinline poster="assets/hero-van.jpg"></video>
+      <img class="hero-image" src="assets/hero-darimar-atardecer.jpg" alt="Combi DariMar al atardecer">
       <div class="hero-overlay"></div>
 
       <nav class="nav">
         <a class="brand" href="#inicio" aria-label="DariMar inicio">
-          <span class="brand-symbol">DM</span>
+          <img class="brand-logo" src="assets/logo-darimar.png" alt="DariMar">
           <span>
-            <strong>DariMar</strong>
             <small>Viajes y Turismo</small>
           </span>
         </a>
@@ -30,24 +46,22 @@
         <div class="nav-links">
           <a href="#servicios">Servicios</a>
           <a href="#flota">Flota</a>
-          <a href="#galeria">Galeria</a>
-          <a href="#reservar">Reservar</a>
+          <a href="#empresa">DariMar</a>
+          <a class="nav-cta" href="#reservar">Cotizar viaje</a>
         </div>
       </nav>
 
       <section class="hero-content">
         <div class="hero-copy">
-          <p class="badge">Traslados confiables a todo el pais</p>
-          <h1>DariMar Viajes y Turismo</h1>
-          <p>Viajes en combi para aeropuerto, eventos, deportes, turismo y traslados privados. Puntualidad, comodidad y atencion cercana en cada salida.</p>
+          <p>La mejor solución para traslados, eventos, turismo y equipos deportivos. Servicio seguro, puntual y personalizado.</p>
           <div class="hero-actions">
-            <a class="btn primary" href="#reservar">Cotizar viaje</a>
-            <a class="btn ghost" href="#galeria">Ver la combi</a>
+            <a class="btn primary" href="#reservar">Solicitar cotización</a>
+            <a class="btn ghost" href="#flota">Conocer nuestra combi</a>
           </div>
         </div>
 
         <form class="quote-panel" id="quickQuote">
-          <span class="panel-kicker">Consulta rapida</span>
+          <span class="panel-kicker">Cotización online</span>
           <label>
             Tipo de traslado
             <select id="tripType">
@@ -66,7 +80,7 @@
             Fecha
             <input id="quickDate" type="date">
           </label>
-          <button class="btn primary full" type="submit">Enviar por WhatsApp</button>
+          <button class="btn primary full" type="submit">Solicitar cotización</button>
         </form>
       </section>
     </header>
@@ -92,32 +106,31 @@
       </section>
 
       <section class="section services" id="servicios">
-        <div class="section-title">
-          <span class="eyebrow">Servicios</span>
-          <h2>Una combi lista para cada plan</h2>
-          <p>Armamos el traslado segun tu grupo, horario y destino. Simple, claro y sin vueltas.</p>
+        <div class="section-title centered services-heading">
+          <span class="eyebrow">DariMar Viajes y Turismo</span>
+          <h2>Nuestros servicios</h2>
         </div>
 
         <div class="service-grid">
-          <article class="service-card">
-            <span class="icon">✈</span>
+          <article class="service-card service-photo" style="--card-image: url('assets/airport.png')">
             <h3>Aeropuerto</h3>
             <p>Ida, vuelta o espera coordinada para viajar sin apuro y llegar a horario.</p>
+            <a class="service-whatsapp" href="https://wa.me/5492257691814" target="_blank" rel="noreferrer">Cotización WhatsApp <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16.02 3.2a12.66 12.66 0 0 0-10.9 19.1L3.2 28.8l6.66-1.74A12.67 12.67 0 1 0 16.02 3.2Zm0 22.98a10.28 10.28 0 0 1-5.24-1.44l-.38-.23-3.95 1.03 1.05-3.84-.25-.4a10.28 10.28 0 1 1 8.77 4.88Zm5.64-7.7c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.21.31-.82 1.02-1 1.23-.18.21-.37.23-.68.08-1.84-.92-3.05-1.65-4.27-3.75-.32-.55.32-.51.91-1.7.1-.21.05-.39-.03-.55-.08-.16-.71-1.71-.98-2.34-.26-.62-.53-.54-.71-.55h-.61c-.21 0-.55.08-.84.39-.29.31-1.11 1.08-1.11 2.63s1.14 3.05 1.3 3.26c.16.21 2.25 3.43 5.45 4.81.76.33 1.35.52 1.81.67.76.24 1.46.21 2.01.13.61-.09 1.85-.76 2.11-1.5.26-.73.26-1.36.18-1.5-.08-.13-.29-.21-.6-.37Z" fill="currentColor"/></svg></a>
           </article>
-          <article class="service-card">
-            <span class="icon">★</span>
+          <article class="service-card service-photo" style="--card-image: url('assets/brand-post.png')">
             <h3>Eventos</h3>
             <p>Traslados para fiestas, reuniones, casamientos y salidas privadas.</p>
+            <a class="service-whatsapp" href="https://wa.me/5492257691814" target="_blank" rel="noreferrer">Cotización WhatsApp <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#whatsapp-icon"/></svg></a>
           </article>
-          <article class="service-card">
-            <span class="icon">⚑</span>
+          <article class="service-card service-photo" style="--card-image: url('assets/hockey-trip.png')">
             <h3>Deportes</h3>
             <p>Equipos, clubes y grupos con bolsos, horarios definidos y regreso pactado.</p>
+            <a class="service-whatsapp" href="https://wa.me/5492257691814" target="_blank" rel="noreferrer">Cotización WhatsApp <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#whatsapp-icon"/></svg></a>
           </article>
-          <article class="service-card">
-            <span class="icon">⌁</span>
+          <article class="service-card service-photo" style="--card-image: url('assets/road-sunset.jpg')">
             <h3>Turismo</h3>
             <p>Escapadas, excursiones y viajes a medida para disfrutar el camino.</p>
+            <a class="service-whatsapp" href="https://wa.me/5492257691814" target="_blank" rel="noreferrer">Cotización WhatsApp <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#whatsapp-icon"/></svg></a>
           </article>
         </div>
       </section>
@@ -129,7 +142,7 @@
         <div class="feature-copy">
           <span class="eyebrow">Flota DariMar</span>
           <h2>Comodidad, aire y espacio para viajar mejor</h2>
-          <p>Un servicio pensado para grupos que necesitan moverse seguros: salidas coordinadas, comunicacion por WhatsApp y atencion personalizada.</p>
+          <p>Un servicio pensado para grupos que necesitan moverse seguros: salidas coordinadas, comunicación por WhatsApp y atención personalizada.</p>
           <ul class="check-list">
             <li>Unidades habilitadas para transporte de pasajeros</li>
             <li>Viajes privados y grupales</li>
@@ -139,43 +152,59 @@
         </div>
       </section>
 
-      <section class="section gallery-section" id="galeria">
-        <div class="section-title">
-          <span class="eyebrow">Galeria</span>
-          <h2>Fotos reales de los viajes</h2>
-          <p>La pagina usa material propio para que el cliente vea la combi y el tipo de servicio antes de consultar.</p>
+      <section class="section fleet-catalog">
+        <div class="section-title centered">
+          <span class="eyebrow">Nuestra unidad</span>
+          <h2>Conocé la combi de DariMar</h2>
         </div>
+        <article class="vehicle-card">
+          <video autoplay muted loop playsinline poster="assets/hero-van.jpg" aria-label="Video de la combi Iveco DariMar">
+            <source src="assets/iveco-19-lugares.mp4" type="video/mp4">
+          </video>
+          <div class="vehicle-copy">
+            <span class="eyebrow">DariMar Viajes y Turismo</span>
+            <h3>Iveco · 19 lugares</h3>
+            <p>Una unidad preparada para que tu grupo viaje cómodo en cada recorrido.</p>
+            <ul class="vehicle-features">
+              <li>Aire acondicionado</li>
+              <li>Bluetooth</li>
+              <li>Tomas USB</li>
+            </ul>
+            <div class="vehicle-actions"><a class="btn primary" href="#reservar">Cotización WhatsApp</a></div>
+          </div>
+        </article>
+      </section>
 
-        <div class="gallery">
-          <button class="gallery-item large" type="button" data-img="assets/hero-van.jpg">
-            <img src="assets/hero-van.jpg" alt="Combi DariMar de frente">
-          </button>
-          <button class="gallery-item tall" type="button" data-img="assets/hockey-trip.png">
-            <img src="assets/hockey-trip.png" alt="Viaje de equipo femenino en combi DariMar">
-          </button>
-          <button class="gallery-item" type="button" data-img="assets/airport.png">
-            <img src="assets/airport.png" alt="Traslado al aeropuerto">
-          </button>
-          <button class="gallery-item" type="button" data-img="assets/brand-post.png">
-            <img src="assets/brand-post.png" alt="Publicacion de marca DariMar">
-          </button>
-          <button class="gallery-item wide" type="button" data-img="assets/van-detail.jpg">
-            <img src="assets/van-detail.jpg" alt="Detalle de unidad DariMar">
-          </button>
+      <section class="solutions" id="empresa">
+        <div class="about-card">
+          <div class="about-card-copy">
+            <span class="eyebrow">Sobre nosotros</span>
+            <h2>Una empresa familiar, cerca tuyo en cada viaje</h2>
+            <p>DariMar es una empresa familiar manejada por sus propios dueños. Con más de 15 años de trayectoria y miles de viajes realizados por todo el país, trabajamos para que cada traslado sea cómodo, seguro y bien acompañado.</p>
+            <a class="btn primary" href="#reservar">Consultá tu próximo viaje</a>
+          </div>
+          <div class="about-card-image">
+            <img src="assets/darimar-combi-ilustracion.jpg" alt="Ilustración de la combi DariMar">
+          </div>
         </div>
       </section>
 
       <section class="booking" id="reservar">
         <div class="booking-copy">
           <span class="eyebrow">Reservas</span>
-          <h2>Cotiza tu traslado por WhatsApp</h2>
-          <p>Completa los datos y generamos un mensaje listo para enviar.</p>
+          <h2>¿Necesitás una cotización rápida?</h2>
+          <p>Hablá con nuestro equipo. Completá tus datos y recibí tu propuesta por WhatsApp.</p>
+          <div class="booking-benefits"><span>✓ Respuesta directa</span><span>✓ Sin compromiso</span><span>✓ Para grupos y empresas</span></div>
         </div>
 
         <form class="booking-form" id="bookingForm">
           <label>
             Nombre
             <input id="name" type="text" placeholder="Tu nombre" required>
+          </label>
+          <label>
+            Teléfono
+            <input id="phone" type="tel" placeholder="Ej: 2257 000000" required>
           </label>
           <label>
             Origen
@@ -197,11 +226,19 @@
             Horario
             <input id="time" type="time" required>
           </label>
+          <label>
+            ¿Necesitás regreso?
+            <select id="returnTrip"><option value="No">No</option><option value="Sí">Sí</option></select>
+          </label>
+          <label>
+            Fecha y hora de regreso
+            <input id="returnDateTime" type="datetime-local">
+          </label>
           <label class="wide">
             Comentario
             <textarea id="notes" rows="4" placeholder="Contanos si llevas equipaje, bolsos deportivos o necesitas ida y vuelta"></textarea>
           </label>
-          <button class="btn primary full" type="submit">Abrir WhatsApp</button>
+          <button class="btn primary full" type="submit">Solicitar cotización gratuita</button>
         </form>
       </section>
     </main>
@@ -214,10 +251,9 @@
       <a class="footer-phone" href="https://wa.me/5492257691814" target="_blank" rel="noreferrer">2257 69-1814</a>
     </footer>
 
-    <dialog class="lightbox" id="lightbox">
-      <button class="close-lightbox" type="button" aria-label="Cerrar galeria">×</button>
-      <img src="" alt="Foto ampliada">
-    </dialog>
+    <a class="whatsapp-float" href="https://wa.me/5492257691814" target="_blank" rel="noreferrer" aria-label="Consultar por WhatsApp">
+      <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M16.02 3.2a12.66 12.66 0 0 0-10.9 19.1L3.2 28.8l6.66-1.74A12.67 12.67 0 1 0 16.02 3.2Zm0 22.98a10.28 10.28 0 0 1-5.24-1.44l-.38-.23-3.95 1.03 1.05-3.84-.25-.4a10.28 10.28 0 1 1 8.77 4.88Zm5.64-7.7c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.5-.16-.71.16-.21.31-.82 1.02-1 1.23-.18.21-.37.23-.68.08-1.84-.92-3.05-1.65-4.27-3.75-.32-.55.32-.51.91-1.7.1-.21.05-.39-.03-.55-.08-.16-.71-1.71-.98-2.34-.26-.62-.53-.54-.71-.55h-.61c-.21 0-.55.08-.84.39-.29.31-1.11 1.08-1.11 2.63s1.14 3.05 1.3 3.26c.16.21 2.25 3.43 5.45 4.81.76.33 1.35.52 1.81.67.76.24 1.46.21 2.01.13.61-.09 1.85-.76 2.11-1.5.26-.73.26-1.36.18-1.5-.08-.13-.29-.21-.6-.37Z" fill="currentColor"/></svg>
+    </a>
 
     <script src="script.js"></script>
   </body>
