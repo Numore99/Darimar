@@ -66,11 +66,19 @@
 
                 <div class="flex items-center gap-2 bg-blue-800 p-2 rounded-lg border border-blue-700">
                     <label for="vehiculoSelect" class="font-semibold text-sm">Vehículo:</label>
-                    <img src="amarok-4x4-negra.svg" alt="Amarok 4x4 negra" class="h-7 w-14 object-contain" title="Amarok 4x4 negra">
-                    <select id="vehiculoSelect" onchange="cambiarVehiculo()" class="bg-white text-gray-900 font-bold py-1 px-3 rounded shadow text-sm outline-none">
+                    <div class="relative">
+                    <button id="vehiculoPickerButton" type="button" onclick="toggleVehiculoPicker()" class="bg-white text-gray-900 font-bold py-1 px-3 rounded shadow text-sm outline-none cursor-pointer flex items-center gap-2 min-w-[190px]">
+                        <span id="vehiculoPickerIcon" class="text-base">🚐</span><span id="vehiculoPickerLabel">IVECO AB056GY</span><span class="ml-auto">▾</span>
+                    </button>
+                    <div id="vehiculoPickerMenu" class="hidden absolute right-0 mt-1 w-full min-w-[220px] bg-white text-gray-900 rounded shadow-xl border border-slate-300 z-50">
+                        <button type="button" onclick="seleccionarVehiculo('iveco')" class="w-full px-3 py-2 text-left hover:bg-slate-100 flex items-center gap-2"><span>🚐</span><span>IVECO AB056GY</span></button>
+                        <button type="button" onclick="seleccionarVehiculo('amarok')" class="w-full px-3 py-2 text-left hover:bg-slate-100 flex items-center gap-2"><img src="amarok-4x4-negra.svg" alt="Amarok 4x4 negra" class="h-5 w-9 object-contain"><span>AMAROK KHA475</span></button>
+                    </div>
+                    <select id="vehiculoSelect" class="hidden">
                         <option value="iveco">🚐 IVECO AB056GY</option>
                         <option value="amarok">AMAROK KHA475</option>
                     </select>
+                    </div>
                 </div>
             </div>
         </div>
@@ -291,8 +299,27 @@
 
         function cambiarVehiculo() {
             vehiculoActual = document.getElementById('vehiculoSelect').value;
+            actualizarVehiculoPicker();
             document.getElementById('vj_vehiculo').value = vehiculoActual;
             renderVehiculoSeleccionado();
+        }
+
+        function toggleVehiculoPicker() {
+            document.getElementById('vehiculoPickerMenu').classList.toggle('hidden');
+        }
+
+        function seleccionarVehiculo(id) {
+            document.getElementById('vehiculoSelect').value = id;
+            document.getElementById('vehiculoPickerMenu').classList.add('hidden');
+            cambiarVehiculo();
+        }
+
+        function actualizarVehiculoPicker() {
+            const esAmarok = vehiculoActual === 'amarok';
+            document.getElementById('vehiculoPickerIcon').innerHTML = esAmarok
+                ? '<img src="amarok-4x4-negra.svg" alt="Amarok 4x4 negra" class="h-4 w-8 object-contain">'
+                : '🚐';
+            document.getElementById('vehiculoPickerLabel').innerText = esAmarok ? 'AMAROK KHA475' : 'IVECO AB056GY';
         }
 
         function escucharFlota() {
