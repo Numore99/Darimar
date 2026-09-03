@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flota DariMar | Administración</title>
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        .editing-cell {
+            background: #eff6ff !important;
+            border: 2px solid #3b82f6 !important;
+            padding: 2px !important;
+            border-radius: 4px;
+        }
+        .editing-cell input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: inherit;
+            font-size: inherit;
+            outline: none;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans pb-12">
+
+
+    <div id="pinModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm text-center">
+            <span class="text-4xl mb-2 block">🔒</span>
+            <h2 class="text-xl font-bold text-gray-800">Acceso Restringido</h2>
+            <p class="text-xs text-gray-500 mb-4">Ingresa la clave PIN para administrar el sistema</p>
+            <input type="password" id="pinInput" placeholder="****" class="text-center text-2xl tracking-widest border-2 border-blue-500 rounded-lg p-2 w-full mb-4 outline-none focus:ring-2 focus:ring-blue-300">
+            <button onclick="validarPin()" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 rounded-lg shadow transition">Ingresar al Panel</button>
+            <p id="pinError" class="text-red-500 text-xs font-bold mt-3 hidden">❌ PIN incorrecto. Intenta de nuevo.</p>
+        </div>
+    </div>
+
+    <!-- Toast de Notificaciones -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white text-xs px-4 py-3 rounded-lg shadow-xl hidden transition-all duration-300 z-50"></div>
+
+    <header class="bg-blue-900 text-white shadow-lg p-4 mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <img src="logo-darimar.png" alt="DariMar" class="h-12 w-auto object-contain bg-white rounded-lg p-1">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-wide">ADMINISTRACIÓN FLOTA DARIMAR</h1>
+                    <p class="text-xs text-blue-200">Sincronización en vivo con Firebase</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Botón de Exportación a PDF -->
+                <button onclick="exportarReportePDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3 rounded shadow flex items-center gap-1 transition">
+                    📄 Descargar PDF Resumido
+                </button>
+
+                <div class="flex items-center gap-2 bg-blue-800 p-2 rounded-lg border border-blue-700">
+                    <label for="vehiculoSelect" class="font-semibold text-sm">Vehículo:</label>
+                    <select id="vehiculoSelect" onchange="cambiarVehiculo()" class="bg-white text-gray-900 font-bold py-1 px-3 rounded shadow text-sm outline-none">
+                        <option value="iveco">🚐 IVECO AB056GY</option>
+                        <option value="amarok">🚙 AMAROK KHA475</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Columna Izquierda: Datos, Vencimientos, Checklist -->
+        <div class="space-y-6">
+            <section class="bg-white p-5 rounded-xl shadow-md border-t-4 border-blue-600">
+                <h2 class="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">📄 Datos del Vehículo</h2>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div><label class="block text-xs font-semibold text-gray-500">PATENTE</label><input type="text" id="v_patente" oninput="guardarFormulario()" class="w-full border p-1 rounded font-bold uppercase"></div>
+                    <div><label class="block text-xs font-semibold text-gray-500">MARCA / MODELO</label><input type="text" id="v_marca" oninput="guardarFormulario()" class="w-full border p-1 rounded"></div>
+                    <div><label class="block text-xs font-semibold text-gray-500">AÑO</label><input type="text" id="v_anio" oninput="guardarFormulario()" class="w-full border p-1 rounded"></div>
+                    <div><label class="block text-xs font-semibold text-gray-500">KM ACTUAL</label><input type="number" id="v_km" oninput="guardarFormulario()" class="w-full border p-1 rounded font-bold text-blue-600"></div>
+                </div>
+            </section>
+
+            <section class="bg-white p-5 rounded-xl shadow-md border-t-4 border-cyan-600">
+                <h2 class="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">📎 Papeles del Vehículo</h2>
+                <p class="text-xs text-gray-500 mb-3">Subí un PDF con la documentación del vehículo seleccionado.</p>
+                <input type="file" id="vehiculo_pdf" accept="application/pdf,.pdf" class="w-full text-xs border rounded p-2 bg-gray-50">
+                <button type="button" onclick="subirDocumentoVehiculo()" class="mt-2 w-full bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2 px-4 rounded transition">Subir / Reemplazar PDF</button>
+                <div id="estadoDocumentoVehiculo" class="mt-3 text-xs"></div>
+            </section>
+
+            <section class="bg-white p-5 rounded-xl shadow-md border-t-4 border-yellow-500">
+                <h2 class="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">📅 Vencimientos Importantes</h2>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between items-center"><span>🛡️ Seguro:</span><input type="date" id="venc_seguro" oninput="guardarFormulario()" class="border p-1 rounded text-xs"></div>
+                    <div class="flex justify-between items-center"><span>🔍 VTV:</span><input type="date" id="venc_vtv" oninput="guardarFormulario()" class="border p-1 rounded text-xs"></div>
+                    <div class="flex justify-between items-center"><span>⚙️ RTO:</span><input type="date" id="venc_rto" oninput="guardarFormulario()" class="border p-1 rounded text-xs"></div>
+                    <div class="flex justify-between items-center"><span>🧯 Matafuego:</span><input type="date" id="venc_matafuego" oninput="guardarFormulario()" class="border p-1 rounded text-xs"></div>
+                </div>
+            </section>
+
+            <section class="bg-white p-5 rounded-xl shadow-md border-t-4 border-green-500">
+                <h2 class="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">📋 Control Chequeo Rápido</h2>
+                <div id="checklistContainer" class="grid grid-cols-2 gap-2 text-sm"></div>
+                <div class="mt-4">
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">NOTAS / OBSERVACIONES</label>
+                    <textarea id="checklistNotas" rows="4" oninput="guardarFormulario()" class="w-full border p-2 rounded resize-y text-sm"></textarea>
+                </div>
+            </section>
+        </div>
+
+        <!-- Columna Derecha: Tablas, Operación y Finanzas -->
+        <div class="md:col-span-2 space-y-6">
+
+            <!-- Resumen de Gastos -->
+            <section class="bg-white p-5 rounded-xl shadow-md border-t-4 border-emerald-600">
+                <h2 class="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">💰 Resumen de Gastos</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-1">
+                    <div class="bg-red-50 border border-red-200 p-3 rounded-lg text-center">
+                        <p class="text-xs text-red-600 font-bold">TOTAL REPARACIONES</p>
+                        <p id="costoTotalReparaciones" class="text-xl font-black text-red-700">$0</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-center">
+                        <p class="text-xs text-emerald-600 font-bold">GASTO TOTAL ACUMULADO</p>
+                        <p id="costoTotalGeneral" class="text-2xl font-black text-emerald-800">$0</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mantenimiento -->
+            <section class="bg-white p-5 rounded-xl shadow-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-700">🔧 Mantenimientos Realizados</h2>
+                    <button type="button" onclick="document.getElementById('formService').classList.toggle('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-2 rounded shadow font-semibold transition">+ Agregar Service</button>
+                </div>
+                <form id="formService" onsubmit="guardarMantenimiento(event)" class="hidden bg-blue-50 p-3 rounded-lg border mb-4 space-y-2 text-xs">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <input type="date" id="service_fecha" required class="p-2 border rounded">
+                        <input type="number" id="service_km" placeholder="KM Service" required class="p-2 border rounded">
+                        <input type="text" id="service_trabajo" placeholder="Trabajo" required class="p-2 border rounded">
+                        <input type="number" id="service_prox" placeholder="Próx. Service (KM)" class="p-2 border rounded">
+                    </div>
+                    <input type="text" id="service_obs" placeholder="Observaciones" class="w-full p-2 border rounded">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition">Guardar Service</button>
+                </form>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-100 border-b">
+                            <tr><th class="p-2">Fecha</th><th class="p-2">KM</th><th class="p-2">Trabajo</th><th class="p-2">Próx</th><th class="p-2">Obs.</th><th class="p-2">Acción</th></tr>
+                        </thead>
+                        <tbody id="tablaMantenimiento"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Reparaciones -->
+            <section class="bg-white p-5 rounded-xl shadow-md border-t-4 border-red-500">
+                <h2 class="text-lg font-bold text-gray-700 mb-3">🚨 Registro de Reparaciones / Daños</h2>
+                <form id="formReparacion" onsubmit="guardarReparacion(event)" class="bg-gray-50 p-3 rounded-lg border mb-4 space-y-3 text-xs">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <input type="date" id="rep_fecha" required class="p-2 border rounded">
+                        <input type="number" id="rep_km" placeholder="KM Actual" required class="p-2 border rounded">
+                        <input type="text" id="rep_detalle" placeholder="Detalle" required class="p-2 border rounded">
+                        <input type="number" id="rep_costo" placeholder="Costo Est. ($)" class="p-2 border rounded">
+                        <div class="col-span-2">
+                            <label class="block font-semibold mb-1">Foto del Daño (Autocomprimida):</label>
+                            <input type="file" id="rep_foto" accept="image/*" class="w-full text-xs">
+                        </div>
+                    </div>
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded w-full transition">Guardar Reparación</button>
+                </form>
+                <div id="listaReparaciones" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </section>
+
+            <!-- SECCIÓN CONSOLIDADA: TOTAL DE VIAJES POR CHOFER (MENSUAL) -->
+            <section class="bg-white p-5 rounded-xl shadow-md border-t-4 border-indigo-600">
+                <h2 class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
+                    <span>📊</span> Total de Viajes por Chofer (Mensual)
+                </h2>
+                <p class="text-xs text-slate-500 mb-4">Selecciona el mes para consultar la actividad desplegable por chofer.</p>
+                
+                <div id="panel_total_choferes" class="space-y-3">
+                    <!-- Se renderiza dinámicamente -->
+                </div>
+            </section>
+
+            <!-- Agenda de Viajes -->
+            <section class="bg-white p-5 rounded-xl shadow-md border-t-4 border-purple-600">
+                <h2 class="text-lg font-bold text-gray-700 mb-3">🚌 Agenda y Control de Viajes</h2>
+                <form id="formViaje" onsubmit="guardarViaje(event)" class="bg-purple-50 p-3 rounded-lg border mb-4 space-y-2 text-xs">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <input type="date" id="vj_fecha" required class="p-2 border rounded">
+                        <select id="vj_vehiculo" class="p-2 border rounded font-semibold text-gray-700">
+                            <option value="iveco">IVECO AB056GY</option>
+                            <option value="amarok">🚙 AMAROK KHA475</option>
+                        </select>
+                        <input type="text" id="vj_chofer" placeholder="Nombre Chofer" required class="p-2 border rounded">
+                        <input type="text" id="vj_destino" placeholder="Destino / Ruta" required class="p-2 border rounded">
+                        <input type="number" id="vj_dinero" placeholder="Dinero de viaje ($)" min="0" step="0.01" required class="p-2 border rounded font-semibold text-emerald-700">
+                        <select id="vj_estado" class="p-2 border rounded">
+                            <option value="Pendiente">⏳ Pendiente</option>
+                            <option value="Realizado">✅ Realizado</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded w-full transition">+ Registrar Viaje</button>
+                </form>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-purple-100 border-b">
+                            <tr><th class="p-2">Fecha</th><th class="p-2">Vehículo</th><th class="p-2">Chofer</th><th class="p-2">Destino</th><th class="p-2">Dinero de viaje</th><th class="p-2">Estado</th><th class="p-2">Acciones</th></tr>
+                        </thead>
+                        <tbody id="tablaViajes"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const PIN_HASH = "9a5a48758da347f33bd37064cfbd05442ef005c85ae0ea4614740d5597316ed3";
+
+        async function validarPin() {
+            const input = document.getElementById('pinInput').value;
+            const bytes = new TextEncoder().encode(input);
+            const digest = await crypto.subtle.digest('SHA-256', bytes);
+            const hash = Array.from(new Uint8Array(digest))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+
+            if (hash === PIN_HASH) {
+                document.getElementById('pinModal').classList.add('hidden');
+                document.getElementById('pinInput').value = '';
+                document.getElementById('pinError').classList.add('hidden');
+            } else {
+                document.getElementById('pinError').classList.remove('hidden');
+                document.getElementById('pinInput').value = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const pinInput = document.getElementById('pinInput');
+            if (pinInput) {
+                pinInput.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') validarPin();
+                });
+            }
+        });
+
+        function mostrarToast(mensaje) {
+            const toast = document.getElementById('toast');
+            toast.innerText = mensaje;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 2500);
+        }
+
+        // Configuración pública requerida por Firebase Web.
+        const firebaseConfig = {
+            apiKey: "AIzaSyA7bzz1r--DrVexrKk_WKPU46UNgZzCn_0",
+            authDomain: "la-costa-viajes.firebaseapp.com",
+            projectId: "la-costa-viajes",
+            storageBucket: "la-costa-viajes.firebasestorage.app",
+            messagingSenderId: "346505256901",
+            appId: "1:346505256901:web:5e8a2ff61978f0185fb5ac"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        const FLOTA_COLLECTION = 'flota_darimar';
+        const FLOTA_INICIAL = {
+            iveco: { marca: 'Iveco', patente: 'AB056GY', choferes: ['DARIO', 'MARIA'], viajes: [], reparaciones: [], mantenimientos: [], checklist: {} },
+            amarok: { marca: 'Amarok', patente: 'KHA475', choferes: ['DARIO', 'MARIA'], viajes: [], reparaciones: [], mantenimientos: [], checklist: {} }
+        };
+        let vehiculoActual = 'iveco';
+        let todosLosVehiculos = JSON.parse(JSON.stringify(FLOTA_INICIAL));
+        const itemsChecklist = ['Luces', 'Aceite', 'Agua', 'Refrigerante', 'Líquido de frenos', 'Neumáticos', 'Limpiaparabrisas', 'Batería'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderChecklist();
+            escucharFlota();
+            inicializarEdicionEnTablas();
+        });
+
+        function cambiarVehiculo() {
+            vehiculoActual = document.getElementById('vehiculoSelect').value;
+            document.getElementById('vj_vehiculo').value = vehiculoActual;
+            renderVehiculoSeleccionado();
+        }
+
+        function escucharFlota() {
+            db.collection(FLOTA_COLLECTION).onSnapshot((snapshot) => {
+                todosLosVehiculos = JSON.parse(JSON.stringify(FLOTA_INICIAL));
+                let todosLosViajes = [];
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    todosLosVehiculos[doc.id] = data;
+
+                    if (data.viajes && Array.isArray(data.viajes)) {
+                        data.viajes.forEach((v, idx) => {
+                            todosLosViajes.push({
+                                ...v,
+                                vehiculoId: doc.id,
+                                originalIndex: idx
+                            });
+                        });
+                    }
+                });
+
+                todosLosViajes.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+                renderVehiculoSeleccionado();
+                renderViajes(todosLosViajes);
+                renderPanelesVehiculosIndividuales();
+            });
+        }
+
+        /* REGLA DEL SEMÁFORO:
+           - Vencido (<0 días o hoy): Rojo
+           - Por vencer (1 a 7 días / <=1 semana): Amarillo
+           - Ok (>7 días): Verde
+        */
+        function evaluarSemaforo(fechaStr) {
+            if (!fechaStr) return 'ok';
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+            const fecha = new Date(fechaStr + 'T00:00:00');
+            const difDias = Math.ceil((fecha - hoy) / (1000 * 60 * 60 * 24));
+
+            if (difDias <= 0) return 'vencido';
+            if (difDias <= 7) return 'por_vencer';
+            return 'ok';
+        }
+
+        function aplicarSemaforo(elemId, fechaStr) {
+            const elem = document.getElementById(elemId);
+            if (!elem) return;
+            const estado = evaluarSemaforo(fechaStr);
+            elem.className = "border p-1 rounded text-xs font-bold ";
+            if (estado === 'vencido') elem.className += "bg-red-100 text-red-800 border-red-400";
+            else if (estado === 'por_vencer') elem.className += "bg-yellow-100 text-yellow-800 border-yellow-400";
+            else elem.className += "bg-green-100 text-green-800 border-green-300";
+        }
+
+        function renderVehiculoSeleccionado() {
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            document.getElementById('v_patente').value = data.patente || '';
+            document.getElementById('v_marca').value = data.marca || '';
+            document.getElementById('v_anio').value = data.anio || '';
+            document.getElementById('v_km').value = data.km || '';
+
+            document.getElementById('venc_seguro').value = data.venc_seguro || '';
+            document.getElementById('venc_vtv').value = data.venc_vtv || '';
+            document.getElementById('venc_rto').value = data.venc_rto || '';
+            document.getElementById('venc_matafuego').value = data.venc_matafuego || '';
+
+            aplicarSemaforo('venc_seguro', data.venc_seguro);
+            aplicarSemaforo('venc_vtv', data.venc_vtv);
+            aplicarSemaforo('venc_rto', data.venc_rto);
+            aplicarSemaforo('venc_matafuego', data.venc_matafuego);
+
+            document.getElementById('checklistNotas').value = data.checklistNotas || '';
+
+            itemsChecklist.forEach((item, index) => {
+                const chk = document.getElementById(`chk_${index}`);
+                if (chk) chk.checked = !!(data.checklist && data.checklist[item]);
+            });
+
+            renderMantenimiento(data.mantenimientos || []);
+            renderReparaciones(data.reparaciones || []);
+            calcularGastosTotales(data);
+            actualizarDocumentoVehiculo(data);
+        }
+
+        let debounceTimer;
+        function guardarFormulario() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const data = todosLosVehiculos[vehiculoActual] || {};
+                data.patente = document.getElementById('v_patente').value;
+                data.marca = document.getElementById('v_marca').value;
+                data.anio = document.getElementById('v_anio').value;
+                data.km = document.getElementById('v_km').value;
+                data.venc_seguro = document.getElementById('venc_seguro').value;
+                data.venc_vtv = document.getElementById('venc_vtv').value;
+                data.venc_rto = document.getElementById('venc_rto').value;
+                data.venc_matafuego = document.getElementById('venc_matafuego').value;
+                data.checklistNotas = document.getElementById('checklistNotas').value;
+
+                data.checklist = {};
+                itemsChecklist.forEach((item, index) => {
+                    const chk = document.getElementById(`chk_${index}`);
+                    if (chk) data.checklist[item] = chk.checked;
+                });
+
+                db.collection(FLOTA_COLLECTION).doc(vehiculoActual).set(data, { merge: true })
+                    .then(() => mostrarToast("💾 Cambios guardados"));
+            }, 500);
+        }
+
+        function renderChecklist() {
+            const container = document.getElementById('checklistContainer');
+            container.innerHTML = itemsChecklist.map((item, index) => `
+                <label class="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded border">
+                    <input type="checkbox" id="chk_${index}" onchange="guardarFormulario()" class="rounded text-blue-600">
+                    <span class="text-xs">${item}</span>
+                </label>
+            `).join('');
+        }
+
+        /* GASTOS Y COSTOS TOTALES */
+        function calcularGastosTotales(data) {
+            const totRep = (data.reparaciones || []).reduce((sum, item) => sum + (Number(item.costo) || 0), 0);
+            document.getElementById('costoTotalReparaciones').innerText = `$${totRep.toLocaleString('es-AR')}`;
+            document.getElementById('costoTotalGeneral').innerText = `$${totRep.toLocaleString('es-AR')}`;
+        }
+
+        /* EXPORTACIÓN A PDF RESUMIDO */
+        function exportarReportePDF() {
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            const totRep = (data.reparaciones || []).reduce((sum, i) => sum + (Number(i.costo) || 0), 0);
+
+            const contenedor = document.createElement('div');
+            contenedor.className = "p-8 bg-white font-sans text-gray-800 space-y-6";
+
+            contenedor.innerHTML = `
+                <div style="border-bottom:2px solid #1e3a8a;padding-bottom:12px;margin-bottom:20px;">
+                    <h1 style="font-size:20px;font-weight:bold;color:#1e3a8a;margin:0;">LA COSTA VIAJES - REPORTE RESUMIDO</h1>
+                    <p style="font-size:11px;color:#6b7280;margin-top:4px;">
+                        Vehículo: <strong>${data.patente || ''} - ${data.marca || ''}</strong> |
+                        Fecha: ${new Date().toLocaleDateString('es-AR')}
+                    </p>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-bottom:20px;">
+                    <div style="flex:1;border:1px solid #e5e7eb;padding:10px;border-radius:6px;background:#f9fafb;">
+                        <p style="font-size:10px;color:#4b5563;font-weight:bold;">KM ACTUAL</p>
+                        <p style="font-size:16px;font-weight:bold;color:#1e3a8a;">${data.km || '--'} KM</p>
+                    </div>
+                    <div style="flex:1;border:1px solid #fca5a5;padding:10px;border-radius:6px;background:#fef2f2;">
+                        <p style="font-size:10px;color:#b91c1c;font-weight:bold;">TOTAL REPARACIONES</p>
+                        <p style="font-size:16px;font-weight:bold;color:#b91c1c;">$${totRep.toLocaleString('es-AR')}</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <h3 style="font-size:12px;font-weight:bold;color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:4px;">📅 Estado de Vencimientos</h3>
+                    <p style="font-size:11px;margin-top:6px;">
+                        <strong>Seguro:</strong> ${data.venc_seguro || 'N/A'} |
+                        <strong>VTV:</strong> ${data.venc_vtv || 'N/A'} |
+                        <strong>RTO:</strong> ${data.venc_rto || 'N/A'} |
+                        <strong>Matafuego:</strong> ${data.venc_matafuego || 'N/A'}
+                    </p>
+                </div>
+
+                <div>
+                    <h3 style="font-size:12px;font-weight:bold;color:#374151;border-bottom:1px solid #e5e7eb;padding-bottom:4px;">🔧 Mantenimientos Realizados</h3>
+                    <table style="width:100%;text-align:left;font-size:10px;border-collapse:collapse;margin-top:6px;">
+                        <thead>
+                            <tr style="background:#f3f4f6;">
+                                <th style="padding:6px;border:1px solid #e5e7eb;">Fecha</th>
+                                <th style="padding:6px;border:1px solid #e5e7eb;">KM</th>
+                                <th style="padding:6px;border:1px solid #e5e7eb;">Trabajo</th>
+                                <th style="padding:6px;border:1px solid #e5e7eb;">Próximo KM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(data.mantenimientos || []).map(m => `
+                                <tr>
+                                    <td style="padding:6px;border:1px solid #e5e7eb;">${m.fecha}</td>
+                                    <td style="padding:6px;border:1px solid #e5e7eb;">${m.km} KM</td>
+                                    <td style="padding:6px;border:1px solid #e5e7eb;">${m.trabajo}</td>
+                                    <td style="padding:6px;border:1px solid #e5e7eb;">${m.prox ? m.prox + ' KM' : '-'}</td>
+                                </tr>
+                            `).join('') || '<tr><td colspan="4" style="padding:6px;text-align:center;">Sin registros</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            const opt = {
+                margin: 0.5,
+                filename: `Reporte_${data.patente || vehiculoActual}_${new Date().toISOString().slice(0,10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(contenedor).save();
+            mostrarToast("📄 Descargando PDF resumido...");
+        }
+
+        /* MANTENIMIENTO */
+        function guardarMantenimiento(e) {
+            e.preventDefault();
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            if (!data.mantenimientos) data.mantenimientos = [];
+            data.mantenimientos.push({
+                fecha: document.getElementById('service_fecha').value,
+                km: document.getElementById('service_km').value,
+                trabajo: document.getElementById('service_trabajo').value,
+                prox: document.getElementById('service_prox').value,
+                obs: document.getElementById('service_obs').value
+            });
+            db.collection(FLOTA_COLLECTION).doc(vehiculoActual).set(data, { merge: true });
+            document.getElementById('formService').reset();
+            document.getElementById('formService').classList.add('hidden');
+            mostrarToast("🔧 Service registrado");
+        }
+
+        function eliminarMantenimiento(index) {
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            data.mantenimientos.splice(index, 1);
+            db.collection(FLOTA_COLLECTION).doc(vehiculoActual).set(data, { merge: true });
+            mostrarToast("🗑️ Registro eliminado");
+        }
+
+        function renderMantenimiento(list) {
+            const tbody = document.getElementById('tablaMantenimiento');
+            if (!list.length) { tbody.innerHTML = '<tr><td colspan="6" class="p-3 text-center text-gray-400">Sin registros.</td></tr>'; return; }
+            tbody.innerHTML = list.map((item, index) => `
+                <tr class="border-b hover:bg-gray-50" data-type="mantenimiento" data-index="${index}">
+                    <td class="p-2 editable-cell" data-field="fecha">${item.fecha}</td>
+                    <td class="p-2 font-semibold editable-cell" data-field="km">${item.km}</td>
+                    <td class="p-2 editable-cell" data-field="trabajo">${item.trabajo}</td>
+                    <td class="p-2 text-blue-600 editable-cell" data-field="prox">${item.prox || ''}</td>
+                    <td class="p-2 text-gray-600 editable-cell" data-field="obs">${item.obs || ''}</td>
+                    <td class="p-2"><button onclick="eliminarMantenimiento(${index})" class="text-red-500 font-bold">✕</button></td>
+                </tr>
+            `).join('');
+        }
+
+
+        /* DOCUMENTACIÓN PDF DEL VEHÍCULO */
+        const PDF_CHUNK_SIZE = 700000;
+        const PDF_MAX_SIZE = 12 * 1024 * 1024;
+
+        function actualizarDocumentoVehiculo(data) {
+            const cont = document.getElementById('estadoDocumentoVehiculo');
+            if (!cont) return;
+
+            const doc = data.documentoPdf;
+            if (doc && (doc.url || doc.storage === 'firestore')) {
+                const fecha = doc.actualizado
+                    ? new Date(doc.actualizado).toLocaleString('es-AR')
+                    : '';
+
+                cont.innerHTML = `
+                    <div class="bg-cyan-50 border border-cyan-200 rounded-lg p-3">
+                        <p class="font-bold text-cyan-900 mb-1">📄 ${doc.nombre || 'Documentación.pdf'}</p>
+                        ${fecha ? `<p class="text-[10px] text-cyan-700 mb-2">Actualizado: ${fecha}</p>` : ''}
+                        <div class="flex gap-2">
+                            <button type="button" onclick="abrirDocumentoVehiculoAdmin()" class="flex-1 text-center bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2 px-3 rounded">
+                                Ver / Descargar PDF
+                            </button>
+                            <button type="button" onclick="eliminarDocumentoVehiculo()" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold py-2 px-3 rounded">
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>`;
+            } else {
+                cont.innerHTML = '<div class="text-gray-400 border border-dashed rounded-lg p-3 text-center">No hay documentación cargada.</div>';
+            }
+        }
+
+        function leerArchivoComoBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const resultado = String(reader.result || '');
+                    const base64 = resultado.includes(',') ? resultado.split(',')[1] : resultado;
+                    resolve(base64);
+                };
+                reader.onerror = () => reject(reader.error || new Error('No se pudo leer el PDF'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function borrarChunksDocumento(vehiculoId) {
+            const col = db.collection(FLOTA_COLLECTION).doc(vehiculoId).collection("documentoPdfChunks");
+            const snap = await col.get();
+            if (snap.empty) return;
+
+            let batch = db.batch();
+            let ops = 0;
+
+            for (const d of snap.docs) {
+                batch.delete(d.ref);
+                ops++;
+                if (ops === 400) {
+                    await batch.commit();
+                    batch = db.batch();
+                    ops = 0;
+                }
+            }
+
+            if (ops > 0) await batch.commit();
+        }
+
+        async function subirDocumentoVehiculo() {
+            const input = document.getElementById('vehiculo_pdf');
+            const file = input.files && input.files[0];
+
+            if (!file) {
+                mostrarToast("Seleccioná un archivo PDF");
+                return;
+            }
+
+            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                mostrarToast("El archivo debe ser PDF");
+                return;
+            }
+
+            if (file.size > PDF_MAX_SIZE) {
+                mostrarToast("El PDF supera el límite de 12 MB");
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="subirDocumentoVehiculo()"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = "Subiendo...";
+                btn.classList.add("opacity-60", "cursor-wait");
+            }
+
+            try {
+                mostrarToast("📤 Preparando PDF...");
+                const base64 = await leerArchivoComoBase64(file);
+                const chunks = [];
+
+                for (let i = 0; i < base64.length; i += PDF_CHUNK_SIZE) {
+                    chunks.push(base64.slice(i, i + PDF_CHUNK_SIZE));
+                }
+
+                await borrarChunksDocumento(vehiculoActual);
+
+                const vehRef = db.collection(FLOTA_COLLECTION).doc(vehiculoActual);
+                const chunksRef = vehRef.collection("documentoPdfChunks");
+
+                for (let i = 0; i < chunks.length; i++) {
+                    mostrarToast(`📤 Subiendo PDF ${i + 1}/${chunks.length}...`);
+                    await chunksRef.doc(String(i).padStart(4, '0')).set({
+                        indice: i,
+                        data: chunks[i]
+                    });
+                }
+
+                const documentoPdf = {
+                    nombre: file.name,
+                    tipo: 'application/pdf',
+                    tamanio: file.size,
+                    storage: 'firestore',
+                    chunks: chunks.length,
+                    actualizado: new Date().toISOString()
+                };
+
+                await vehRef.set({ documentoPdf }, { merge: true });
+                input.value = '';
+                mostrarToast("✅ PDF guardado correctamente");
+            } catch (error) {
+                console.error("Error al subir PDF:", error);
+                mostrarToast("❌ Error: " + (error.message || "No se pudo subir el PDF"));
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = "Subir / Reemplazar PDF";
+                    btn.classList.remove("opacity-60", "cursor-wait");
+                }
+            }
+        }
+
+        async function obtenerBlobDocumentoVehiculo(vehiculoId, docMeta) {
+            if (docMeta && docMeta.url) {
+                const respuesta = await fetch(docMeta.url);
+                if (!respuesta.ok) throw new Error("No se pudo descargar el PDF");
+                return await respuesta.blob();
+            }
+
+            if (!docMeta || docMeta.storage !== 'firestore') {
+                throw new Error("No hay documentación disponible");
+            }
+
+            const snap = await db.collection(FLOTA_COLLECTION)
+                .doc(vehiculoId)
+                .collection("documentoPdfChunks")
+                .orderBy("indice")
+                .get();
+
+            if (snap.empty) throw new Error("El PDF no tiene datos guardados");
+
+            let base64 = "";
+            snap.forEach(d => {
+                base64 += d.data().data || "";
+            });
+
+            const binario = atob(base64);
+            const bytes = new Uint8Array(binario.length);
+            for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+
+            return new Blob([bytes], { type: 'application/pdf' });
+        }
+
+        async function abrirDocumentoVehiculoAdmin() {
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            const doc = data.documentoPdf;
+            if (!doc) return;
+
+            const nueva = window.open('', '_blank');
+
+            try {
+                mostrarToast("📄 Abriendo PDF...");
+                const blob = await obtenerBlobDocumentoVehiculo(vehiculoActual, doc);
+                const url = URL.createObjectURL(blob);
+
+                if (nueva) nueva.location.href = url;
+                else window.location.href = url;
+
+                setTimeout(() => URL.revokeObjectURL(url), 120000);
+            } catch (error) {
+                if (nueva) nueva.close();
+                console.error(error);
+                mostrarToast("❌ " + (error.message || "No se pudo abrir el PDF"));
+            }
+        }
+
+        async function eliminarDocumentoVehiculo() {
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            if (!data.documentoPdf) return;
+            if (!confirm("¿Eliminar el PDF de este vehículo?")) return;
+
+            try {
+                const doc = data.documentoPdf;
+
+                if (doc.storage === 'firestore') {
+                    await borrarChunksDocumento(vehiculoActual);
+                } else if (doc.url && typeof storage !== 'undefined') {
+                    try {
+                        const ref = storage.ref().child(`documentos_vehiculos/${vehiculoActual}/documentacion.pdf`);
+                        await ref.delete();
+                    } catch (e) {
+                        console.warn("No se pudo borrar el archivo anterior de Storage:", e);
+                    }
+                }
+
+                await db.collection(FLOTA_COLLECTION).doc(vehiculoActual).set({
+                    documentoPdf: firebase.firestore.FieldValue.delete()
+                }, { merge: true });
+
+                mostrarToast("🗑️ PDF eliminado");
+            } catch (error) {
+                console.error(error);
+                mostrarToast("❌ " + (error.message || "No se pudo eliminar el PDF"));
+            }
+        }
+
+        /* REPARACIONES */
+        function comprimirImagen(file, callback) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 800;
+                    let w = img.width, h = img.height;
+                    if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
+                    else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    callback(canvas.toDataURL('image/jpeg', 0.6));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function guardarReparacion(e) {
+            e.preventDefault();
+            const fecha = document.getElementById('rep_fecha').value;
+            const km = document.getElementById('rep_km').value;
+            const detalle = document.getElementById('rep_detalle').value;
+            const costo = Number(document.getElementById('rep_costo').value) || 0;
+            const fotoInput = document.getElementById('rep_foto');
+
+            const enviar = (foto) => {
+                const data = todosLosVehiculos[vehiculoActual] || {};
+                if (!data.reparaciones) data.reparaciones = [];
+                data.reparaciones.push({ fecha, km, detalle, costo, foto });
+                db.collection(FLOTA_COLLECTION).doc(vehiculoActual).set(data, { merge: true });
+                document.getElementById('formReparacion').reset();
+                mostrarToast("🚨 Reparación guardada");
+            };
+
+            if (fotoInput.files && fotoInput.files[0]) {
+                comprimirImagen(fotoInput.files[0], (base64) => enviar(base64));
+            } else {
+                enviar(null);
+            }
+        }
+
+        function eliminarReparacion(index) {
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            data.reparaciones.splice(index, 1);
+            db.collection(FLOTA_COLLECTION).doc(vehiculoActual).set(data, { merge: true });
+            mostrarToast("🗑️ Reparación eliminada");
+        }
+
+        function renderReparaciones(list) {
+            const container = document.getElementById('listaReparaciones');
+            if(!list.length) { container.innerHTML = '<p class="text-xs text-gray-400 col-span-2">Sin registros.</p>'; return; }
+            container.innerHTML = list.map((item, index) => `
+                <div class="border rounded-lg p-3 bg-red-50/30 text-xs relative flex flex-col justify-between">
+                    <button onclick="eliminarReparacion(${index})" class="absolute top-2 right-2 text-red-600 font-bold">✕</button>
+                    <div>
+                        <div class="font-bold text-gray-800">${item.detalle}</div>
+                        <div class="text-gray-500">📅 ${item.fecha} | 🛠️ ${item.km} KM</div>
+                        ${item.costo ? `<div class="text-green-700 font-bold mt-1">Costo: $${item.costo}</div>` : ''}
+                    </div>
+                    ${item.foto ? `<img src="${item.foto}" class="mt-2 rounded h-32 w-full object-cover border" />` : ''}
+                </div>
+            `).join('');
+        }
+
+        /* VIAJES Y CHOFERES */
+        async function guardarViaje(e) {
+            e.preventDefault();
+            const vehiculoSeleccionado = document.getElementById('vj_vehiculo').value;
+            const vehiculoSelectElem = document.getElementById('vj_vehiculo');
+            const vehiculoNombre = vehiculoSelectElem.options[vehiculoSelectElem.selectedIndex].text;
+
+            const nuevoViaje = {
+                fecha: document.getElementById('vj_fecha').value,
+                vehiculoNombre: vehiculoNombre,
+                chofer: document.getElementById('vj_chofer').value,
+                destino: document.getElementById('vj_destino').value,
+                dineroViaje: Number(document.getElementById('vj_dinero').value),
+                estado: document.getElementById('vj_estado').value
+            };
+
+            const docRef = db.collection(FLOTA_COLLECTION).doc(vehiculoSeleccionado);
+            const docSnap = await docRef.get();
+            const targetData = docSnap.exists ? docSnap.data() : {};
+            const listaViajes = targetData.viajes || [];
+
+            listaViajes.push(nuevoViaje);
+            await docRef.set({ viajes: listaViajes }, { merge: true });
+
+            document.getElementById('formViaje').reset();
+            document.getElementById('vj_vehiculo').value = vehiculoActual;
+            mostrarToast("🚌 Viaje programado");
+        }
+
+        async function cambiarEstadoViaje(vehiculoId, originalIndex) {
+            const docRef = db.collection(FLOTA_COLLECTION).doc(vehiculoId);
+            const docSnap = await docRef.get();
+            if (docSnap.exists) {
+                const data = docSnap.data();
+                const lista = data.viajes || [];
+                if (lista[originalIndex]) {
+                    lista[originalIndex].estado = lista[originalIndex].estado === 'Pendiente' ? 'Realizado' : 'Pendiente';
+                    await docRef.set({ viajes: lista }, { merge: true });
+                    mostrarToast("🔄 Estado actualizado");
+                }
+            }
+        }
+
+        async function eliminarViaje(vehiculoId, originalIndex) {
+            const docRef = db.collection(FLOTA_COLLECTION).doc(vehiculoId);
+            const docSnap = await docRef.get();
+            if (docSnap.exists) {
+                const data = docSnap.data();
+                const lista = data.viajes || [];
+                lista.splice(originalIndex, 1);
+                await docRef.set({ viajes: lista }, { merge: true });
+                mostrarToast("🗑️ Viaje eliminado");
+            }
+        }
+
+        function renderViajes(list) {
+            const tbody = document.getElementById('tablaViajes');
+            if (!list.length) { tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-gray-400">Sin registros.</td></tr>'; return; }
+            tbody.innerHTML = list.map(item => `
+                <tr class="border-b hover:bg-gray-50" data-type="viaje" data-vehiculoid="${item.vehiculoId}" data-originalindex="${item.originalIndex}">
+                    <td class="p-2 font-semibold editable-cell" data-field="fecha">${item.fecha}</td>
+                    <td class="p-2 font-bold text-blue-800">${item.vehiculoNombre}</td>
+                    <td class="p-2 font-semibold text-gray-800 editable-cell" data-field="chofer">${item.chofer}</td>
+                    <td class="p-2 editable-cell" data-field="destino">${item.destino}</td>
+                    <td class="p-2 font-bold text-emerald-700 whitespace-nowrap editable-cell" data-field="dineroViaje">${item.dineroViaje}</td>
+                    <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.estado === 'Realizado' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${item.estado}</span></td>
+                    <td class="p-2 flex gap-2">
+                        <button onclick="cambiarEstadoViaje('${item.vehiculoId}', ${item.originalIndex})" class="text-blue-600 font-semibold hover:underline">Cambiar Estado</button>
+                        <button onclick="eliminarViaje('${item.vehiculoId}', ${item.originalIndex})" class="text-red-500 font-bold">✕</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        /* RENDER DE TOTAL DE VIAJES POR CHOFER (MENSUAL CON 12 MESES FUTUROS Y UNIFICADO) */
+        function formatearFecha(fecha) {
+            if (!fecha) return 'Sin fecha';
+            const partes = fecha.split('-');
+            if (partes.length !== 3) return fecha;
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        function formatearDinero(monto) {
+            const valor = Number(monto);
+            return Number.isFinite(valor) ? `$${valor.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : '—';
+        }
+
+        function renderPanelesVehiculosIndividuales() {
+            const panel = document.getElementById('panel_total_choferes');
+            if (!panel) return;
+
+            let todosLosViajes = [];
+            Object.keys(todosLosVehiculos).forEach(id => {
+                const vData = todosLosVehiculos[id];
+                if (vData && Array.isArray(vData.viajes)) {
+                    vData.viajes.forEach(v => {
+                        todosLosViajes.push({ ...v, vehiculoId: id });
+                    });
+                }
+            });
+
+            const mesesMap = {};
+            todosLosViajes.forEach(v => {
+                if (!v.fecha) return;
+                const mesKey = v.fecha.substring(0, 7);
+                if (!mesesMap[mesKey]) mesesMap[mesKey] = [];
+                mesesMap[mesKey].push(v);
+            });
+
+            const hoy = new Date();
+            const mesesSet = new Set(Object.keys(mesesMap));
+
+            for (let i = 0; i <= 12; i++) {
+                const f = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+                const mesKey = `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}`;
+                mesesSet.add(mesKey);
+            }
+
+            const mesesOrdenados = Array.from(mesesSet).sort((a, b) => a.localeCompare(b));
+            
+            const selectId = `select_mes_global`;
+            const selectExistente = document.getElementById(selectId);
+            const mesActualKey = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+            const mesSeleccionado = (selectExistente && selectExistente.value) ? selectExistente.value : mesActualKey;
+
+            let html = `
+                <div class="bg-slate-100/80 p-3 rounded-xl border border-slate-200 mb-4 flex items-center gap-3">
+                    <label for="${selectId}" class="font-bold text-slate-700 text-xs flex items-center gap-1.5 shrink-0">
+                        <span>🗓️</span> Almanaque:
+                    </label>
+                    <select id="${selectId}" onchange="renderPanelesVehiculosIndividuales()" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-[220px]">
+            `;
+
+            mesesOrdenados.forEach(mesKey => {
+                const [anio, mesNum] = mesKey.split('-');
+                const dateObj = new Date(parseInt(anio), parseInt(mesNum) - 1, 1);
+                const nombreMes = dateObj.toLocaleString('es-ES', { month: 'long' });
+                const mesLabel = `${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)} de ${anio}`;
+
+                html += `<option value="${mesKey}" ${mesKey === mesSeleccionado ? 'selected' : ''}>${mesLabel}</option>`;
+            });
+
+            html += `
+                    </select>
+                </div>
+                <div class="space-y-2">
+            `;
+
+            const viajesDelMes = mesesMap[mesSeleccionado] || [];
+            const choferesMap = {};
+
+            viajesDelMes.forEach(v => {
+                let choferRaw = (v.chofer || 'Sin asignación').trim();
+                if (!choferRaw) choferRaw = 'Sin asignación';
+                
+                const choferKey = choferRaw.toLowerCase().replace(/(^|\s)\S/g, l => l.toUpperCase());
+
+                if (!choferesMap[choferKey]) choferesMap[choferKey] = [];
+                choferesMap[choferKey].push(v);
+            });
+
+            Object.values(choferesMap).forEach(lista => {
+                lista.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+            });
+
+            const choferesNombres = Object.keys(choferesMap).sort();
+
+            if (!choferesNombres.length) {
+                html += `<p class="text-gray-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs">Sin viajes registrados para este mes.</p>`;
+            } else {
+                choferesNombres.forEach(chofer => {
+                    const listaChofer = choferesMap[chofer];
+                    const totalViajes = listaChofer.length;
+
+                    html += `
+                        <details class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden group">
+                            <summary class="p-3 font-semibold text-slate-800 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition select-none">
+                                <span class="flex items-center gap-2">
+                                    <span class="text-base">👤</span> ${chofer}
+                                </span>
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-blue-600 text-white text-[11px] px-2.5 py-0.5 rounded-full font-bold shadow-sm">
+                                        ${totalViajes} ${totalViajes === 1 ? 'viaje' : 'viajes'}
+                                    </span>
+                                    <span class="text-[10px] text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                                </div>
+                            </summary>
+                            <div class="bg-white border-t border-slate-200 overflow-x-auto">
+                                <table class="w-full min-w-[520px] text-left text-[11px]">
+                                    <thead class="bg-slate-100 text-[9px] uppercase tracking-wide text-slate-500">
+                                        <tr>
+                                            <th class="px-3 py-2">Fecha</th>
+                                            <th class="px-3 py-2">Vehículo</th>
+                                            <th class="px-3 py-2">Destino</th>
+                                            <th class="px-3 py-2 text-right">Dinero de viaje</th>
+                                            <th class="px-3 py-2 text-right">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        ${listaChofer.map(item => `
+                                            <tr class="hover:bg-blue-50/55">
+                                                <td class="px-3 py-2 font-bold text-slate-700 whitespace-nowrap">${formatearFecha(item.fecha)}</td>
+                                                <td class="px-3 py-2 text-blue-700 font-semibold whitespace-nowrap">${item.vehiculoNombre || item.vehiculoId}</td>
+                                                <td class="px-3 py-2 text-slate-600">${item.destino || 'Sin destino'}</td>
+                                                <td class="px-3 py-2 text-right font-bold text-emerald-700 whitespace-nowrap">${formatearDinero(item.dineroViaje)}</td>
+                                                <td class="px-3 py-2 text-right">
+                                                    <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${item.estado === 'Realizado' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${item.estado || 'Pendiente'}</span>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
+                    `;
+                });
+            }
+
+            html += '</div>';
+            panel.innerHTML = html;
+        }
+
+        /* 💡 LÓGICA DE EDICIÓN DIRECTA EN LAS TABLAS (DOBLE CLIC + ENTER) */
+        function inicializarEdicionEnTablas() {
+            document.addEventListener('dblclick', async function(e) {
+                const cell = e.target.closest('.editable-cell');
+                if (!cell || cell.classList.contains('editing-cell')) return;
+
+                const row = cell.closest('tr');
+                const tableType = row.dataset.type; // 'viaje' o 'mantenimiento'
+                const field = cell.dataset.field;
+                const originalText = cell.textContent.trim();
+
+                cell.classList.add('editing-cell');
+                cell.innerHTML = `<input type="text" value="${originalText}">`;
+
+                const input = cell.querySelector('input');
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
+
+                let saved = false;
+
+                const commitChanges = async () => {
+                    if (saved) return;
+                    saved = true;
+
+                    const newText = input.value.trim();
+                    cell.classList.remove('editing-cell');
+                    cell.textContent = newText !== '' ? newText : originalText;
+
+                    const finalVal = newText !== '' ? newText : originalText;
+
+                    if (tableType === 'viaje') {
+                        const vehiculoId = row.dataset.vehiculoid;
+                        const originalIndex = parseInt(row.dataset.originalindex);
+
+                        const docRef = db.collection(FLOTA_COLLECTION).doc(vehiculoId);
+                        const docSnap = await docRef.get();
+                        if (docSnap.exists) {
+                            const data = docSnap.data();
+                            const viajes = data.viajes || [];
+                            if (viajes[originalIndex]) {
+                                viajes[originalIndex][field] = (field === 'dineroViaje') ? Number(finalVal) || 0 : finalVal;
+                                await docRef.set({ viajes }, { merge: true });
+                                mostrarToast("💾 Viaje actualizado");
+                            }
+                        }
+                    } else if (tableType === 'mantenimiento') {
+                        const index = parseInt(row.dataset.index);
+                        const data = todosLosVehiculos[vehiculoActual] || {};
+                        const mantenimientos = data.mantenimientos || [];
+                        if (mantenimientos[index]) {
+                            mantenimientos[index][field] = finalVal;
+                            await db.collection(FLOTA_COLLECTION).doc(vehiculoActual).set({ mantenimientos }, { merge: true });
+                            mostrarToast("💾 Mantenimiento actualizado");
+                        }
+                    }
+                };
+
+                input.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        commitChanges();
+                    } else if (event.key === 'Escape') {
+                        saved = true;
+                        cell.classList.remove('editing-cell');
+                        cell.textContent = originalText;
+                    }
+                });
+
+                input.addEventListener('blur', function() {
+                    commitChanges();
+                });
+            });
+        }
+    </script>
+</body>
+</html>

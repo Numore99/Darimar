@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80" role="img" aria-label="Amarok 4x4 negra">
+  <g fill="#111827" stroke="#030712" stroke-width="3" stroke-linejoin="round">
+    <path d="M12 49h12l10-25c2-5 6-8 12-8h45c7 0 13 3 17 9l10 15h20c5 0 8 4 8 9v9H12z"/>
+    <path fill="#6b7280" d="M44 21h20v20H35l7-17c1-2 2-3 2-3Zm25 0h21c4 0 7 2 9 6l7 14H69z"/>
+    <path fill="#374151" d="M104 42h18l-5-9h-18z"/>
+    <circle cx="43" cy="59" r="12" fill="#030712"/>
+    <circle cx="43" cy="59" r="5" fill="#9ca3af"/>
+    <circle cx="121" cy="59" r="12" fill="#030712"/>
+    <circle cx="121" cy="59" r="5" fill="#9ca3af"/>
+    <path fill="none" d="M13 49h136M90 17v25"/>
+  </g>
+</svg>
