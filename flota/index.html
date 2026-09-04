@@ -11,6 +11,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); min-width: 650px; }
+        .calendar-day { min-height: 126px; }
+        .calendar-day:hover { box-shadow: inset 0 0 0 2px #60a5fa; }
+        .calendar-event { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        @media (max-width: 640px) { .calendar-day { min-height: 112px; } }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans pb-12">
 
@@ -140,6 +147,11 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="verHistorialCompletoContainer" class="hidden mt-4 pt-4 border-t border-slate-100 text-center">
+                    <button onclick="abrirHistorialCompleto()" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        Ver historial completo <span id="cantidadHistorialCompleto"></span> →
+                    </button>
+                </div>
             </section>
 
             <!-- Mantenimientos -->
@@ -163,6 +175,37 @@
                     </div>
                 </section>
             </div>
+
+            <!-- Almanaque operativo -->
+            <section class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">🗓️ Almanaque operativo</h2>
+                        <p class="text-xs text-slate-500 mt-1">Viajes, gastos, mantenimientos y vencimientos. Elegí un día para ver su tarjeta.</p>
+                    </div>
+                    <div class="flex items-center gap-5">
+                        <div class="flex items-center gap-2">
+                            <button id="calPrev" onclick="moverCalendario(-1)" class="w-9 h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 font-bold text-slate-700" aria-label="Mes anterior">‹</button>
+                            <button id="calNext" onclick="moverCalendario(1)" class="w-9 h-9 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 font-bold text-slate-700" aria-label="Mes siguiente">›</button>
+                        </div>
+                        <button onclick="irAHoyCalendario()" class="px-3 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700">Hoy</button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-x-4 gap-y-1 mb-4 text-[11px] text-slate-600">
+                    <span><i class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></i>Programado</span>
+                    <span><i class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1"></i>Realizado</span>
+                    <span><i class="inline-block w-2 h-2 rounded-full bg-rose-500 mr-1"></i>Gasto</span>
+                    <span><i class="inline-block w-2 h-2 rounded-full bg-violet-500 mr-1"></i>Vencimiento</span>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <div id="calendarioTitulo" class="text-center font-black text-slate-800 py-3 bg-slate-50 capitalize"></div>
+                    <div class="calendar-grid bg-slate-100 text-[10px] font-bold tracking-wide text-slate-500 uppercase">
+                        <div class="p-2 text-center">Lun</div><div class="p-2 text-center">Mar</div><div class="p-2 text-center">Mié</div><div class="p-2 text-center">Jue</div><div class="p-2 text-center">Vie</div><div class="p-2 text-center">Sáb</div><div class="p-2 text-center">Dom</div>
+                    </div>
+                    <div id="calendarioGrid" class="calendar-grid border-t border-slate-200"></div>
+                </div>
+                <p id="calendarioRango" class="text-center text-[11px] text-slate-400 mt-3"></p>
+            </section>
 
         </div>
 
@@ -199,6 +242,43 @@
 
     </main>
 
+    <!-- Detalle del día seleccionado -->
+    <div id="modalDia" class="hidden fixed inset-0 z-[60] bg-slate-950/50 p-4 sm:p-8 overflow-y-auto" onclick="cerrarDetalleDia(event)">
+        <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+            <div class="p-5 bg-slate-900 text-white flex items-start justify-between gap-4">
+                <div><p class="text-xs text-slate-300 uppercase tracking-wider">Detalle del día</p><h3 id="detalleDiaTitulo" class="text-xl font-bold mt-1"></h3></div>
+                <button onclick="cerrarDetalleDia()" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-xl" aria-label="Cerrar">×</button>
+            </div>
+            <div id="detalleDiaContenido" class="p-5 space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- Historial completo: se abre sólo cuando el usuario lo pide -->
+    <div id="modalHistorialViajes" class="hidden fixed inset-0 z-[70] bg-slate-950/50 p-3 sm:p-8 overflow-y-auto" onclick="cerrarHistorialCompleto(event)">
+        <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+            <div class="p-4 sm:p-5 bg-slate-900 text-white flex items-start justify-between gap-4">
+                <div><p class="text-xs text-slate-300 uppercase tracking-wider">Historial completo</p><h3 id="historialCompletoTitulo" class="text-xl font-bold mt-1">Viajes</h3></div>
+                <button onclick="cerrarHistorialCompleto()" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 text-xl" aria-label="Cerrar historial">×</button>
+            </div>
+            <div class="p-4 sm:p-5">
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full min-w-[650px] text-left text-xs">
+                        <thead class="bg-slate-100 border-b"><tr><th class="p-3">Fecha</th><th class="p-3">Chofer</th><th class="p-3">Destino / Ruta</th><th class="p-3">Dinero de viaje</th><th class="p-3">Estado</th></tr></thead>
+                        <tbody id="tablaHistorialCompleto"></tbody>
+                    </table>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+                    <p id="historialPaginacionInfo" class="text-xs text-slate-500"></p>
+                    <div class="flex items-center gap-2">
+                        <button id="historialAnterior" onclick="cambiarPaginaHistorial(-1)" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40">← Anterior</button>
+                        <span id="historialPaginaActual" class="text-xs font-bold text-slate-700 px-2"></span>
+                        <button id="historialSiguiente" onclick="cambiarPaginaHistorial(1)" class="px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40">Siguiente →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function mostrarToast(mensaje) {
             const toast = document.getElementById('toast');
@@ -227,6 +307,11 @@
         let vehiculoActual = 'iveco';
         let todosLosVehiculos = JSON.parse(JSON.stringify(FLOTA_INICIAL));
         const itemsChecklist = ['Luces', 'Aceite', 'Agua', 'Refrigerante', 'Líquido de frenos', 'Neumáticos', 'Limpiaparabrisas', 'Batería'];
+        const hoyCalendario = new Date();
+        hoyCalendario.setHours(0, 0, 0, 0);
+        let mesCalendario = new Date(hoyCalendario.getFullYear(), hoyCalendario.getMonth(), 1);
+        let paginaHistorialViajes = 1;
+        const VIAJES_POR_PAGINA = 10;
 
         document.addEventListener('DOMContentLoaded', () => {
             inicializarSelectorMeses();
@@ -271,6 +356,7 @@
             actualizarVehiculoPicker();
             renderVistaVehiculo();
             renderResumenGlobalFlota();
+            renderCalendario();
 
             if (notificar) {
                 const data = todosLosVehiculos[vehiculoActual] || {};
@@ -321,6 +407,7 @@
                 renderVistaVehiculo();
                 renderResumenGlobalFlota();
                 renderChoferesMensual();
+                renderCalendario();
             });
         }
 
@@ -393,25 +480,60 @@
             }
 
             const viajesList = data.viajes || [];
+            const viajesOrdenados = viajesList.slice().sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
             document.getElementById('totalViajesBadge').innerText = `${viajesList.length} viajes registrados`;
             const tbodyViajes = document.getElementById('tablaViajesVehiculo');
+            const botonHistorial = document.getElementById('verHistorialCompletoContainer');
+            botonHistorial.classList.toggle('hidden', viajesList.length <= 7);
+            document.getElementById('cantidadHistorialCompleto').textContent = `(${viajesList.length})`;
             if (!viajesList.length) {
                 tbodyViajes.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">Sin viajes registrados para este vehículo.</td></tr>';
             } else {
-                tbodyViajes.innerHTML = viajesList.slice().sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '')).map(v => `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-2.5 font-semibold">${formatearFecha(v.fecha)}</td>
-                        <td class="p-2.5 font-bold text-slate-700">${v.chofer}</td>
-                        <td class="p-2.5">${v.destino}</td>
-                        <td class="p-2.5 font-bold text-emerald-700 whitespace-nowrap">${formatearDinero(v.dineroViaje)}</td>
-                        <td class="p-2.5">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${v.estado === 'Realizado' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                                ${v.estado}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('');
+                tbodyViajes.innerHTML = viajesOrdenados.slice(0, 7).map(filaViajeHTML).join('');
             }
+        }
+
+        function filaViajeHTML(v) {
+            return `<tr class="border-b hover:bg-gray-50">
+                <td class="p-2.5 font-semibold">${formatearFecha(v.fecha)}</td>
+                <td class="p-2.5 font-bold text-slate-700">${escaparHtml(v.chofer || '—')}</td>
+                <td class="p-2.5">${escaparHtml(v.destino || 'Sin destino')}</td>
+                <td class="p-2.5 font-bold text-emerald-700 whitespace-nowrap">${formatearDinero(v.dineroViaje)}</td>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${v.estado === 'Realizado' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${escaparHtml(v.estado || 'Pendiente')}</span></td>
+            </tr>`;
+        }
+
+        function abrirHistorialCompleto() {
+            paginaHistorialViajes = 1;
+            document.getElementById('modalHistorialViajes').classList.remove('hidden');
+            renderHistorialCompleto();
+        }
+
+        function cerrarHistorialCompleto(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modalHistorialViajes').classList.add('hidden');
+        }
+
+        function cambiarPaginaHistorial(direccion) {
+            const total = (todosLosVehiculos[vehiculoActual]?.viajes || []).length;
+            const paginas = Math.max(1, Math.ceil(total / VIAJES_POR_PAGINA));
+            paginaHistorialViajes = Math.min(paginas, Math.max(1, paginaHistorialViajes + direccion));
+            renderHistorialCompleto();
+        }
+
+        function renderHistorialCompleto() {
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            const viajes = (data.viajes || []).slice().sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+            const paginas = Math.max(1, Math.ceil(viajes.length / VIAJES_POR_PAGINA));
+            paginaHistorialViajes = Math.min(paginaHistorialViajes, paginas);
+            const inicio = (paginaHistorialViajes - 1) * VIAJES_POR_PAGINA;
+            const pagina = viajes.slice(inicio, inicio + VIAJES_POR_PAGINA);
+            document.getElementById('historialCompletoTitulo').textContent = `Viajes · ${nombreVehiculoCalendario(data)}`;
+            document.getElementById('tablaHistorialCompleto').innerHTML = pagina.length ? pagina.map(filaViajeHTML).join('') : '<tr><td colspan="5" class="p-5 text-center text-slate-400">Sin viajes registrados.</td></tr>';
+            document.getElementById('historialPaginacionInfo').textContent = viajes.length ? `Mostrando ${inicio + 1}–${Math.min(inicio + VIAJES_POR_PAGINA, viajes.length)} de ${viajes.length} viajes` : '';
+            document.getElementById('historialPaginaActual').textContent = `Página ${paginaHistorialViajes} de ${paginas}`;
+            document.getElementById('historialAnterior').disabled = paginaHistorialViajes === 1;
+            document.getElementById('historialSiguiente').disabled = paginaHistorialViajes === paginas;
         }
 
         function renderDocumentoVehiculo(data) {
@@ -499,6 +621,124 @@
         function formatearDinero(monto) {
             const valor = Number(monto);
             return Number.isFinite(valor) ? `$${valor.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : '—';
+        }
+
+        /* ALMANAQUE: información operativa del vehículo seleccionado */
+        function escaparHtml(valor) {
+            return String(valor ?? '').replace(/[&<>'"]/g, caracter => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;'
+            })[caracter]);
+        }
+
+        function esFechaISO(fecha) {
+            return typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha);
+        }
+
+        function nombreVehiculoCalendario(data) {
+            return [data.marca, data.patente && data.patente.toUpperCase()].filter(Boolean).join(' ') || 'Vehículo seleccionado';
+        }
+
+        function obtenerEventosCalendario() {
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            const eventos = [];
+            const agregar = (fecha, tipo, titulo, detalle, costo = 0) => {
+                if (esFechaISO(fecha)) eventos.push({ fecha, tipo, titulo, detalle, costo: Number(costo) || 0 });
+            };
+
+            (data.viajes || []).forEach(v => {
+                const realizado = (v.estado || '').toLowerCase() === 'realizado';
+                agregar(v.fecha, realizado ? 'realizado' : 'programado',
+                    `${realizado ? 'Viaje realizado' : 'Viaje programado'}${v.destino ? ': ' + v.destino : ''}`,
+                    `${v.chofer ? 'Chofer: ' + v.chofer : 'Sin chofer asignado'}${v.dineroViaje !== undefined && v.dineroViaje !== '' ? ' · Monto: ' + formatearDinero(v.dineroViaje) : ''}`);
+            });
+            (data.reparaciones || []).forEach(r => agregar(r.fecha, 'gasto', `Reparación: ${r.detalle || 'Sin detalle'}`, `${r.km ? r.km + ' KM' : 'Reparación registrada'}${r.costo ? ' · Gasto: ' + formatearDinero(r.costo) : ''}`, r.costo));
+            (data.mantenimientos || []).forEach(m => agregar(m.fecha, 'gasto', `Mantenimiento: ${m.trabajo || 'Sin detalle'}`, `${m.km ? m.km + ' KM' : 'Mantenimiento registrado'}${m.prox ? ' · Próx. service: ' + m.prox + ' KM' : ''}${m.costo ? ' · Gasto: ' + formatearDinero(m.costo) : ''}`, m.costo));
+            (data.gastos || []).forEach(g => agregar(g.fecha, 'gasto', `Gasto: ${g.detalle || g.concepto || 'Sin detalle'}`, g.descripcion || (g.costo ? 'Gasto registrado' : ''), g.costo ?? g.monto));
+
+            [
+                ['Seguro', data.venc_seguro], ['VTV', data.venc_vtv], ['RTO', data.venc_rto], ['Matafuego', data.venc_matafuego]
+            ].forEach(([nombre, fecha]) => agregar(fecha, 'vencimiento', `Vence ${nombre}`, 'Documentación del vehículo'));
+
+            return eventos.sort((a, b) => a.fecha.localeCompare(b.fecha) || a.tipo.localeCompare(b.tipo));
+        }
+
+        function moverCalendario(direccion) {
+            const candidato = new Date(mesCalendario.getFullYear(), mesCalendario.getMonth() + direccion, 1);
+            const minimo = new Date(hoyCalendario.getFullYear() - 1, hoyCalendario.getMonth(), 1);
+            const maximo = new Date(hoyCalendario.getFullYear() + 1, hoyCalendario.getMonth(), 1);
+            if (candidato < minimo || candidato > maximo) {
+                mostrarToast('Podés navegar hasta un año antes o después de hoy.');
+                return;
+            }
+            mesCalendario = candidato;
+            renderCalendario();
+        }
+
+        function irAHoyCalendario() {
+            mesCalendario = new Date(hoyCalendario.getFullYear(), hoyCalendario.getMonth(), 1);
+            renderCalendario();
+        }
+
+        function renderCalendario() {
+            const grid = document.getElementById('calendarioGrid');
+            if (!grid) return;
+            const data = todosLosVehiculos[vehiculoActual] || {};
+            const eventosPorFecha = obtenerEventosCalendario().reduce((mapa, evento) => {
+                (mapa[evento.fecha] ||= []).push(evento);
+                return mapa;
+            }, {});
+            const anio = mesCalendario.getFullYear();
+            const mes = mesCalendario.getMonth();
+            document.getElementById('calendarioTitulo').textContent = `${mesCalendario.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })} · ${nombreVehiculoCalendario(data)}`;
+            document.getElementById('calendarioRango').textContent = 'Disponible desde ' + new Date(hoyCalendario.getFullYear() - 1, hoyCalendario.getMonth(), 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' }) + ' hasta ' + new Date(hoyCalendario.getFullYear() + 1, hoyCalendario.getMonth(), 1).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' }) + '.';
+            const inicio = (new Date(anio, mes, 1).getDay() + 6) % 7;
+            const ultimoDia = new Date(anio, mes + 1, 0).getDate();
+            const totalCeldas = Math.ceil((inicio + ultimoDia) / 7) * 7;
+            const fechaHoy = hoyCalendario.toISOString().slice(0, 10);
+            const clasesTipo = { programado: 'bg-amber-100 text-amber-800', realizado: 'bg-emerald-100 text-emerald-800', gasto: 'bg-rose-100 text-rose-800', vencimiento: 'bg-violet-100 text-violet-800' };
+            const iconosTipo = { programado: '◷', realizado: '✓', gasto: '$', vencimiento: '!' };
+            let html = '';
+            for (let celda = 0; celda < totalCeldas; celda++) {
+                const dia = celda - inicio + 1;
+                if (dia < 1 || dia > ultimoDia) {
+                    html += '<div class="calendar-day bg-slate-50/70 border-r border-b border-slate-200"></div>';
+                    continue;
+                }
+                const fecha = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+                const eventos = eventosPorFecha[fecha] || [];
+                const esHoy = fecha === fechaHoy;
+                const vistaEventos = eventos.slice(0, 3).map(e => `<div class="calendar-event ${clasesTipo[e.tipo]} rounded px-1.5 py-0.5 text-[10px] font-semibold mt-1" title="${escaparHtml(e.titulo)}"><span class="mr-1">${iconosTipo[e.tipo]}</span>${escaparHtml(e.titulo)}</div>`).join('');
+                const restantes = eventos.length > 3 ? `<div class="text-[10px] text-blue-700 font-bold mt-1">+ ${eventos.length - 3} más</div>` : '';
+                html += `<button type="button" onclick="abrirDetalleDia('${fecha}')" class="calendar-day text-left bg-white border-r border-b border-slate-200 p-1.5 transition ${eventos.length ? 'cursor-pointer' : 'cursor-default'}" ${eventos.length ? '' : 'disabled'}>
+                    <span class="inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-bold ${esHoy ? 'bg-blue-600 text-white' : 'text-slate-700'}">${dia}</span>${vistaEventos}${restantes}
+                </button>`;
+            }
+            grid.innerHTML = html;
+            const minimo = new Date(hoyCalendario.getFullYear() - 1, hoyCalendario.getMonth(), 1);
+            const maximo = new Date(hoyCalendario.getFullYear() + 1, hoyCalendario.getMonth(), 1);
+            document.getElementById('calPrev').disabled = mesCalendario <= minimo;
+            document.getElementById('calNext').disabled = mesCalendario >= maximo;
+            ['calPrev', 'calNext'].forEach(id => document.getElementById(id).classList.toggle('opacity-35', document.getElementById(id).disabled));
+        }
+
+        function abrirDetalleDia(fecha) {
+            const eventos = obtenerEventosCalendario().filter(e => e.fecha === fecha);
+            if (!eventos.length) return;
+            const estilos = { programado: 'border-amber-200 bg-amber-50', realizado: 'border-emerald-200 bg-emerald-50', gasto: 'border-rose-200 bg-rose-50', vencimiento: 'border-violet-200 bg-violet-50' };
+            const etiquetas = { programado: 'Programado', realizado: 'Realizado', gasto: 'Gasto', vencimiento: 'Vencimiento' };
+            const totalGastos = eventos.filter(e => e.tipo === 'gasto').reduce((suma, e) => suma + e.costo, 0);
+            document.getElementById('detalleDiaTitulo').textContent = new Date(fecha + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('detalleDiaContenido').innerHTML = `${totalGastos ? `<div class="rounded-xl bg-rose-50 border border-rose-200 p-3 text-sm text-rose-800"><span class="font-semibold">Gastos registrados:</span> <strong>${formatearDinero(totalGastos)}</strong></div>` : ''}` + eventos.map(e => `
+                <article class="rounded-xl border p-3 ${estilos[e.tipo]}">
+                    <div class="flex items-start justify-between gap-3"><h4 class="font-bold text-sm text-slate-800">${escaparHtml(e.titulo)}</h4><span class="shrink-0 text-[10px] font-bold px-2 py-1 rounded-full bg-white/70 text-slate-600">${etiquetas[e.tipo]}</span></div>
+                    ${e.detalle ? `<p class="text-xs text-slate-600 mt-1.5">${escaparHtml(e.detalle)}</p>` : ''}
+                </article>`).join('');
+            document.getElementById('modalDia').classList.remove('hidden');
+        }
+
+        function cerrarDetalleDia(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('modalDia').classList.add('hidden');
         }
 
         function renderChoferesMensual() {
